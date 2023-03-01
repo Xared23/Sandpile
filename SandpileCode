@@ -1,0 +1,82 @@
+import random as rand
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+
+
+
+class SandPile:
+    def __init__(self,n):
+        grid_dic = {}
+        for i in range(n):
+            for j in range(n):
+                grid_dic[(i, j)] = 0
+        self.grid = grid_dic
+        self.unstable_nodes = []
+        self.size = n
+    def populate(self,a,b):
+        self.grid[(a,b)]= self.grid[(a,b)] + 1
+        if self.grid[(a,b)]>=4 and (not ((a,b) in self.unstable_nodes)):
+            self.unstable_nodes.append((a,b))
+        return self
+    def topple(self, a, b):
+        if (self.grid[(a,b)]>=4):
+            self.grid[(a,b)] = self.grid[(a,b)] - 4
+            for i in [(0,1),(0,-1),(-1,0),(1,0)]:
+                c = a + i[0]
+                d = b + i[1]
+                if 0 <= c <= (self.size - 1) and 0 <= d <=(self.size - 1):
+                    self.grid[(c,d)]=self.grid[(c,d)]+1
+                    if self.grid[(c,d)] >= 4 and (not ((c,d) in self.unstable_nodes)):
+                        self.unstable_nodes.append((c,d))
+        return self
+    def stabilize(self):
+        while self.unstable_nodes:
+            r = len(self.unstable_nodes)
+            randval = rand.randint(0,r-1)
+            x = self.unstable_nodes[randval][0]
+            y = self.unstable_nodes[randval][1]
+            self.topple(x,y)
+            del self.unstable_nodes[randval]
+        return self
+
+
+m = 10 # determines grid size
+n = 2*m + 1 # actual grid size, always odd
+origin = m  # origin is (origin,origin)
+t = 1000
+sand = SandPile(n)
+
+fig, ax = plt.subplots()
+
+for i in range(t):
+    # r1 = rand.randint(0,n-1)
+    # r2 = rand.randint(0, n - 1)
+    # sand.populate(r1,r2)
+    sand.populate(origin,origin)
+    sand.stabilize()
+    z = list(sand.grid.values())
+    zee = np.transpose(np.reshape(z, (n, n)))  # MAKE SURE YOU HAVE THE CORRECT 2D ARRAY CONFIG FOR COORDS
+    if (i+1)%200 == 0:
+        print('[')
+        for i in range(n):
+            print('[', end =" ")
+            for j in range(n):
+                print(zee[i,j], end =" ")
+                print(',', end =" ")
+            print('],')
+        print(']')
+    ax.clear()
+    ax.pcolor(zee,cmap='Blues')
+    ax.set_title(f"frame {i}")
+    plt.pause(0.0001)
+
+
+# K=list(zip(*sand.grid.keys()))
+# x=K[0]
+# y=K[1]
+
+# a note about matplotlib: 'ax' as traditionally used is (I think) an instantiation of the class plt (?) i.e you can call same functions(?) (look into exactly how fig, ax works)
+
+plt.show()
